@@ -1,0 +1,90 @@
+//
+//  Prioridade.swift
+//  UIKIT
+//
+//  Created by Bernardo on 13/11/26.
+//
+
+import Foundation
+import CoreGraphics
+
+// usar a mesma fonte para os textos
+nonisolated enum Prioridade: String, Codable, CaseIterable{
+    
+    case pequena, media, grande
+    
+    var nome: String {
+        switch self {
+        case .pequena: return "Pequena"
+        case .media: return "Média"
+        case .grande: return "Grande"
+            
+        }
+    }
+    
+    //determina em pixels o diamentro dos planetas
+    var diametroBase: CGFloat {
+        switch self {
+        case .pequena: return 90
+        case .media: return 130
+        case .grande: return 200
+        }
+    }
+    
+    // cuidado para telas menores
+    func diametro(larguraDaTela: CGFloat) -> CGFloat {
+        return diametroBase * min(1, larguraDaTela / 440)
+    }
+    
+    var elasticidade: CGFloat{
+        switch self {
+        case .pequena: return 0.55
+        case .media: return 0.4
+        case .grande: return 0.25
+        }
+    }
+    
+    var densidade: CGFloat{
+        switch self {
+        case .pequena: return 0.6
+        case .media: return 1.0
+        case .grande: return 2.2
+        }
+    }
+    
+        func tamanhoDoTitulo(larguraDaTela: CGFloat) -> CGFloat {
+            let base: CGFloat
+            switch self {
+            case .pequena: base = 13
+            case .media: base = 15
+            case .grande: base = 17
+            }
+            return base * min(1, larguraDaTela / 440)
+        }
+
+        var aparenciaPadrao: AparenciaPlaneta {
+            switch self {
+            case .pequena: return .lua
+            case .media: return .terra
+            case .grande: return .jupiter
+            }
+        }
+
+        var aparencias: [AparenciaPlaneta] {
+            switch self {
+            case .pequena: return [.lua, .tita]
+            case .media: return [.terra, .marte]
+            case .grande: return [.jupiter, .saturno]
+            }
+        }
+
+        func sortearAparencia() -> AparenciaPlaneta {
+            return aparencias.randomElement() ?? aparenciaPadrao
+        }
+    }
+    
+    
+    
+    
+    
+    
