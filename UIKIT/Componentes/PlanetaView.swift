@@ -28,7 +28,7 @@ final class PlanetaView: UIView {
         
         self.atividadeID = atividadeID
         
-        // O frame inicial é SÓ a bola (o diâmetro).
+        // O frame inicial é SÓ a bola (o diâmetro)
         super.init(frame: CGRect(x: 0, y: 0, width: diametro, height: diametro))
         
         configurarVisual(titulo: titulo, nomeDoAsset: nomeDoAsset,
@@ -79,7 +79,7 @@ final class PlanetaView: UIView {
             duplo.numberOfTapsRequired = 2
 
             let simples = UITapGestureRecognizer(target: self, action: #selector(tocouUmaVez))
-            // Se o usuário tentar tocar duas vezes rápido, o simples ESPERA para não disparar antes da hora.
+            // Se o usuário tentar tocar duas vezes rápido, o simples ESPERA para não disparar
             simples.require(toFail: duplo)
 
             let arrasto = UIPanGestureRecognizer(target: self, action: #selector(arrastou(_:)))
@@ -95,7 +95,7 @@ final class PlanetaView: UIView {
             accessibilityHint = "Toque para editar."
             
             
-            // Como o toque duplo no VoiceOver ativa o item, criamos uma ação explícita para concluir.
+            // Como o toque duplo no VoiceOver ativa o item, criamos uma ação explícita para concluir
             accessibilityCustomActions = [
                 UIAccessibilityCustomAction(name: "Concluir") { [weak self] _ in
                     guard let self else { return false }
@@ -105,7 +105,6 @@ final class PlanetaView: UIView {
             ]
         }
 
-        /// Usado pela tela Editar quando só o título mudou (o tamanho continua o mesmo).
         func atualizarTitulo(_ titulo: String) {
             rotulo.text = titulo
             accessibilityLabel = titulo

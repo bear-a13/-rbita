@@ -8,7 +8,6 @@
 import Foundation
 import CoreGraphics
 
-// usar a mesma fonte para os textos
 nonisolated enum Prioridade: String, Codable, CaseIterable{
     
     case pequena, media, grande

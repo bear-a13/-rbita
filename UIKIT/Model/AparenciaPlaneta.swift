@@ -22,18 +22,6 @@ nonisolated enum AparenciaPlaneta: String, Codable, CaseIterable {
     }
 
     
-    /// Cor predominante do planeta (usada na poeira ao concluir).
-    var corPrincipalHex: UInt32 {
-        switch self {
-        case .lua: return 0xC9CCD6
-        case .terra: return 0x4A90D9
-        case .jupiter: return 0xD9A066
-        case .marte: return 0xD9573B
-        case .tita: return 0x5FB3A1
-        case .saturno: return 0xE8C27A
-        }
-    }
-
     var corDoTituloHex: UInt32 {
         switch self {
         case .lua: return 0x1E2236

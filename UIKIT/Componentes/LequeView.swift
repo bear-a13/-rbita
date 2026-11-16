@@ -1,4 +1,3 @@
-// MARK: - Componentes/LequeView.swift
 import UIKit
 
 @MainActor
@@ -6,12 +5,10 @@ protocol LequeViewDelegate: AnyObject {
     func lequeSelecionou(prioridade: Prioridade)
 }
 
-/// O leque de opções que se abre acima do botão 3D quando o usuário quer criar uma nova atividade.
 final class LequeView: UIView {
     
     weak var delegate: LequeViewDelegate?
     
-    // Contêiner que agrupa os botões de prioridade
     private let stackView = UIStackView()
     
     // Botões para cada nível de prioridade
@@ -40,8 +37,7 @@ final class LequeView: UIView {
         stackView.alignment = .center
         stackView.distribution = .equalSpacing
 
-        // Configuração dos botões com o padrão visual exato do Figma:
-        // Fundo interno: #1A2142 | Stroke (Borda): #3A4475 | Texto: Branco
+        
         configurarBotaoPrioridade(botaoPequena, titulo: "Pequena", acao: #selector(escolherPequena))
         configurarBotaoPrioridade(botaoMedia, titulo: "Média", acao: #selector(escolherMedia))
         configurarBotaoPrioridade(botaoGrande, titulo: "Grande", acao: #selector(escolherGrande))
@@ -60,15 +56,12 @@ final class LequeView: UIView {
             return outgoing
         }
         
-        // Cores exatas fornecidas por você
-        config.baseBackgroundColor = Tema.fundoControle // Parte interna
-        config.baseForegroundColor = .white                 // Texto claro
+        config.baseBackgroundColor = Tema.fundoControle
+        config.baseForegroundColor = .white
         
-        // Stroke (Borda) elegante ao redor do botão
         config.background.strokeColor = Tema.bordaControle
         config.background.strokeWidth = 1.5
         
-        // Espaçamento interno (padding) para o texto respirar dentro da pílula
         config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16)
         
         botao.configuration = config
@@ -87,13 +80,12 @@ final class LequeView: UIView {
         ])
     }
 
-    // MARK: - Ações de Seleção
 
     @objc private func escolherPequena() { delegate?.lequeSelecionou(prioridade: .pequena) }
     @objc private func escolherMedia() { delegate?.lequeSelecionou(prioridade: .media) }
     @objc private func escolherGrande() { delegate?.lequeSelecionou(prioridade: .grande) }
 
-    // MARK: - Animação de Abrir e Fechar o Leque
+    // animação de abrir e fechar o Leque
 
     func alternar(abrir: Bool) {
         isUserInteractionEnabled = abrir
