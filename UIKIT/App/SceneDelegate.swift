@@ -1,4 +1,3 @@
-// MARK: - App/SceneDelegate.swift
 import UIKit
 import SwiftData
 

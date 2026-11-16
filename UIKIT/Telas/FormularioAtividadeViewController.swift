@@ -1,4 +1,3 @@
-// MARK: - Telas/FormularioAtividadeViewController.swift
 import UIKit
 
 @MainActor
@@ -7,8 +6,7 @@ protocol FormularioAtividadeDelegate: AnyObject {
     func formularioEditou(_ atividade: Atividade, titulo: String, descricao: String, prioridade: Prioridade)
 }
 
-/// A MESMA sheet serve para criar e para editar. O modo decide o título e os valores iniciais.
-/// Visual: Figma "03 · Nova · Pequena" (sheet amarela/marrom).
+
 final class FormularioAtividadeViewController: UIViewController {
 
     enum Modo {
@@ -21,12 +19,10 @@ final class FormularioAtividadeViewController: UIViewController {
     private let modo: Modo
     private var prioridadeSelecionada: Prioridade
 
-    // Cabeçalho
     private let botaoFechar = UIButton(type: .system)
     private let tituloTelaLabel = UILabel()
     private let botaoSalvar = UIButton(type: .system)
 
-    // Campos
     private let conteudo = UIStackView()
     private let tituloTextField = UITextField()
     private let descricaoTextView = UITextView()
@@ -49,7 +45,7 @@ final class FormularioAtividadeViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = Tema.fundoSheet
-        // A sheet é escura: assim o "grabber" e o cursor do sistema ficam claros.
+        //preseta o teclado com cor escura, para deixar o app todo no modo dark
         overrideUserInterfaceStyle = .dark
 
         configurarCabecalho()
@@ -61,7 +57,6 @@ final class FormularioAtividadeViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // Na criação o teclado já abre no título; na edição o usuário escolhe o que mudar.
         if case .nova = modo { tituloTextField.becomeFirstResponder() }
     }
 
@@ -72,10 +67,9 @@ final class FormularioAtividadeViewController: UIViewController {
         descricaoPlaceholder.isHidden = !atividade.descricao.isEmpty
     }
 
-    // MARK: - Cabeçalho (× · título · ✓)
-
+// cabeçalho com o x e o check
     private func configurarCabecalho() {
-        // × com o círculo marrom atrás (Figma: botão 44 × 44)
+        
         var configFechar = UIButton.Configuration.filled()
         configFechar.image = UIImage(systemName: "xmark",
                                      withConfiguration: UIImage.SymbolConfiguration(pointSize: 17, weight: .medium))
@@ -96,13 +90,12 @@ final class FormularioAtividadeViewController: UIViewController {
         tituloTelaLabel.textAlignment = .center
         tituloTelaLabel.accessibilityTraits = .header
 
-        // ✓ amarelo. Fica BLOQUEADO (apagado) enquanto o título estiver vazio.
         var configSalvar = UIButton.Configuration.filled()
         configSalvar.image = UIImage(systemName: "checkmark",
                                      withConfiguration: UIImage.SymbolConfiguration(pointSize: 17, weight: .semibold))
         configSalvar.cornerStyle = .capsule
         botaoSalvar.configuration = configSalvar
-        // O botão se redesenha sozinho quando muda de estado (habilitado ↔ bloqueado).
+        // configuracão de permanencia em relação ao check
         botaoSalvar.configurationUpdateHandler = { botao in
             var config = botao.configuration
             if botao.isEnabled {
@@ -138,22 +131,22 @@ final class FormularioAtividadeViewController: UIViewController {
         ])
     }
 
-    // MARK: - Conteúdo (Título · Prioridade · Descrição)
 
     private func configurarConteudo() {
-        // Título
+        // título
         tituloTextField.font = .systemFont(ofSize: 17)
         tituloTextField.textColor = .white
         tituloTextField.tintColor = Tema.amareloPrincipal
         tituloTextField.backgroundColor = Tema.fundoCampo
         tituloTextField.layer.cornerRadius = 14
         tituloTextField.attributedPlaceholder = NSAttributedString(
-            string: "Ex.: Cobrar o Mateus",
+            string: "Ex.: Estudar Astronomia",
             attributes: [.foregroundColor: Tema.textoPlaceholder])
         tituloTextField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 0))
         tituloTextField.leftViewMode = .always
         tituloTextField.returnKeyType = .done
         tituloTextField.accessibilityLabel = "Título"
+        tituloTextField.delegate = self
         tituloTextField.addTarget(self, action: #selector(tituloMudou), for: .editingChanged)
         tituloTextField.addTarget(self, action: #selector(confirmouNoTeclado), for: .editingDidEndOnExit)
         tituloTextField.heightAnchor.constraint(equalToConstant: 51).isActive = true
@@ -192,7 +185,7 @@ final class FormularioAtividadeViewController: UIViewController {
             descricaoPlaceholder.leadingAnchor.constraint(equalTo: descricaoTextView.leadingAnchor, constant: 16)
         ])
 
-        // Empilha: cada campo = rótulo + controle (8 pt), campos separados por 24 pt
+        // empilha os campos campos separando por 24 pt
         conteudo.axis = .vertical
         conteudo.spacing = 24
         conteudo.addArrangedSubview(campo("Título *", tituloTextField))
@@ -207,20 +200,21 @@ final class FormularioAtividadeViewController: UIViewController {
             conteudo.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24)
         ])
     }
+    
 
     private func campo(_ texto: String, _ controle: UIView) -> UIStackView {
         let rotulo = UILabel()
         rotulo.text = texto
         rotulo.font = .systemFont(ofSize: 15, weight: .semibold)
         rotulo.textColor = .white
-        rotulo.isAccessibilityElement = false // o controle já tem accessibilityLabel
+        // campo para acessibilidadde
+        rotulo.isAccessibilityElement = false
         let pilha = UIStackView(arrangedSubviews: [rotulo, controle])
         pilha.axis = .vertical
         pilha.spacing = 8
         return pilha
     }
 
-    /// Cartão "Segmento de prioridade" do Figma: planeta em cima, nome embaixo.
     private func criarCard(para prioridade: Prioridade) -> UIButton {
         var config = UIButton.Configuration.plain()
         config.title = prioridade.nome
@@ -230,7 +224,7 @@ final class FormularioAtividadeViewController: UIViewController {
             return saida
         }
 
-        // Figma: planeta de 30 / 44 / 64 pt, centralizado num espaço de 64 pt.
+        // respeitar a proporção de 30 / 44 / 64 apartir do figma
         let lado: CGFloat = switch prioridade {
         case .pequena: 30
         case .media: 44
@@ -269,7 +263,7 @@ final class FormularioAtividadeViewController: UIViewController {
         }
     }
 
-    /// ✓ só libera quando há algum texto no título.
+    // o check só fica amarelo quando tem alguma coisa no campo de texto
     private func atualizarBotaoSalvar() {
         botaoSalvar.isEnabled = !tituloLimpo.isEmpty
     }
@@ -278,7 +272,6 @@ final class FormularioAtividadeViewController: UIViewController {
         tituloTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
     }
 
-    // MARK: - Ações
 
     @objc private func fecharToque() {
         dismiss(animated: true)
@@ -288,7 +281,7 @@ final class FormularioAtividadeViewController: UIViewController {
         atualizarBotaoSalvar()
     }
 
-    /// Botão "OK" do teclado: só salva se o ✓ estiver liberado.
+    // confirmar no teclado 
     @objc private func confirmouNoTeclado() {
         if botaoSalvar.isEnabled { salvarToque() }
     }
@@ -308,10 +301,20 @@ final class FormularioAtividadeViewController: UIViewController {
     }
 }
 
-// MARK: - UITextViewDelegate (placeholder da descrição)
 
 extension FormularioAtividadeViewController: UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
         descricaoPlaceholder.isHidden = !textView.text.isEmpty
+    }
+}
+
+extension FormularioAtividadeViewController: UITextFieldDelegate {
+    // Título aceita no máximo 20 caracteres 
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange,
+                   replacementString string: String) -> Bool {
+        guard textField === tituloTextField,
+              let atual = textField.text,
+              let intervalo = Range(range, in: atual) else { return true }
+        return atual.replacingCharacters(in: intervalo, with: string).count <= 20
     }
 }

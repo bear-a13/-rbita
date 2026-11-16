@@ -1,7 +1,5 @@
-// MARK: - Estilo/Tema.swift
 import UIKit
 
-/// Todas as cores do app num lugar só. Telas e componentes nunca escrevem cor solta.
 enum Tema {
     // Botão "+" e destaques
     static let amareloPrincipal = UIColor(red: 1.00, green: 0.80, blue: 0.35, alpha: 1.0) // ~#FFCC59
@@ -10,10 +8,12 @@ enum Tema {
 
     // Sheet Nova/Editar (valores do Figma)
     static let fundoSheet = UIColor(hex: 0x946719)
-    static let fundoCampo = UIColor(hex: 0x6E4C12)            // caixas de texto e fundo do x
+    // caixas de texto e fundo do x
+    static let fundoCampo = UIColor(hex: 0x6E4C12)
     static let textoPlaceholder = UIColor(hex: 0xE3C68A)
     static let iconeFechar = UIColor(hex: 0xFFE19A)
-    static let marromEscuro = UIColor(hex: 0x3A1E0C)          // ícone do check
+    // ícone do check
+    static let marromEscuro = UIColor(hex: 0x3A1E0C)
     static let segmentoPadrao = UIColor(hex: 0x7E5815)
     static let segmentoSelecionado = UIColor(hex: 0x5E410F)
     static let textoSegmento = UIColor(hex: 0xF7E3B5)

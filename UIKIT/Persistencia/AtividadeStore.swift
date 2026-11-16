@@ -1,9 +1,7 @@
-// MARK: - Persistencia/AtividadeStore.swift
 import Foundation
 import SwiftData
 
-/// Único lugar do app que fala com o SwiftData.
-/// Telas pedem as coisas ao store; nunca usam ModelContext diretamente.
+
 @MainActor
 final class AtividadeStore {
     private let modelContext: ModelContext
@@ -12,9 +10,7 @@ final class AtividadeStore {
         self.modelContext = modelContext
     }
 
-    // MARK: Leitura
 
-    /// Atividades ainda não concluídas, da mais antiga para a mais nova.
     func pendentes() -> [Atividade] {
         let descritor = FetchDescriptor<Atividade>(
             predicate: #Predicate { $0.concluidaEm == nil },
@@ -28,16 +24,13 @@ final class AtividadeStore {
         }
     }
 
-    /// Busca UMA atividade pelo id (usado quando o planeta é tocado).
     func buscar(id: UUID) -> Atividade? {
         var descritor = FetchDescriptor<Atividade>(predicate: #Predicate { $0.id == id })
         descritor.fetchLimit = 1
         return try? modelContext.fetch(descritor).first
     }
 
-    // MARK: Escrita
 
-    /// Quem cria a Atividade é o store: a tela só manda os dados.
     @discardableResult
     func adicionar(titulo: String, descricao: String, prioridade: Prioridade,
                    aparencia: AparenciaPlaneta? = nil) -> Atividade {
@@ -53,13 +46,11 @@ final class AtividadeStore {
         atividade.descricao = descricao
         if atividade.prioridade != prioridade {
             atividade.prioridade = prioridade
-            // A pele precisa combinar com o novo tamanho (ex.: Lua não pode virar "Grande").
             atividade.aparencia = prioridade.sortearAparencia()
         }
         salvar()
     }
 
-    /// Concluir NÃO apaga: só preenche a data.
     func concluir(_ atividade: Atividade) {
         atividade.concluidaEm = .now
         salvar()

@@ -1,4 +1,3 @@
-// MARK: - Componentes/BotaoNovaAtividade.swift
 import UIKit
 
 @MainActor
@@ -12,13 +11,13 @@ final class BotaoNovaAtividade: UIView {
     
     weak var delegate: BotaoNovaAtividadeDelegate?
     
-    // 1. A base escura (fica deslocada 6 pixels para baixo, criando o relevo 3D)
+    // a base escura fica deslocada 6 pixels para baixo
     private let baseView = UIView()
     
-    // 2. A tampa móvel (o círculo amarelo principal)
+    //o botao de cima
     private let botaoTampa = UIButton(type: .system)
     
-    // 3. O rótulo de texto abaixo do botão
+    // o texto
     private let rotulo = UILabel()
     
     // Estados internos
@@ -38,15 +37,14 @@ final class BotaoNovaAtividade: UIView {
     }
 
     private func configurarVisual() {
-        // --- Configuração da Base 3D (Tom mais escuro) ---
         baseView.backgroundColor = Tema.amareloSombra
-        baseView.layer.cornerRadius = 32 // Metade de 64 pt
+        baseView.layer.cornerRadius = 32
         addSubview(baseView)
 
         var config = UIButton.Configuration.filled()
         config.image = UIImage(systemName: "plus")
 
-        // Tamanho e espessura do "+"
+        // configuração do botão de +
         let simboloConfig = UIImage.SymbolConfiguration(pointSize: 26, weight: .bold) // Mude o pointSize para o tamanho que preferir
         config.preferredSymbolConfigurationForImage = simboloConfig
         config.cornerStyle = .capsule
@@ -54,7 +52,7 @@ final class BotaoNovaAtividade: UIView {
         config.baseForegroundColor = .black
         botaoTampa.configuration = config
         
-        // Interceptamos os toques para controlar o estado de pressão
+        // estado de presão para criar o botão 3D
         botaoTampa.addTarget(self, action: #selector(toqueDown), for: [.touchDown, .touchDragEnter])
         botaoTampa.addTarget(self, action: #selector(toqueUp), for: [.touchUpInside, .touchDragExit, .touchCancel])
         botaoTampa.addTarget(self, action: #selector(botaoApertado), for: .touchUpInside)
@@ -62,12 +60,12 @@ final class BotaoNovaAtividade: UIView {
         botaoTampa.accessibilityLabel = "Nova atividade"
         addSubview(botaoTampa)
 
-        // --- Configuração do Rótulo ---
+        // texto abaixo do botão
         rotulo.text = "Nova atividade"
         rotulo.font = .systemFont(ofSize: 12, weight: .medium)
         rotulo.textColor = Tema.textoClaro
         rotulo.textAlignment = .center
-        rotulo.isAccessibilityElement = false // o botão já fala o texto
+        rotulo.isAccessibilityElement = false
         addSubview(rotulo)
     }
 
@@ -77,19 +75,19 @@ final class BotaoNovaAtividade: UIView {
         rotulo.translatesAutoresizingMaskIntoConstraints = false
 
         NSLayoutConstraint.activate([
-            // A base escura fica exatamente 6 pixels abaixo do topo, criando o relevo visível
+            //configura a altura do botão de baixo
             baseView.topAnchor.constraint(equalTo: topAnchor, constant: 6),
             baseView.centerXAnchor.constraint(equalTo: centerXAnchor),
             baseView.widthAnchor.constraint(equalToConstant: 64),
             baseView.heightAnchor.constraint(equalToConstant: 64),
 
-            // A tampa amarela começa no topo absoluto (y = 0)
+            // a tampa amarela fica no y0
             botaoTampa.topAnchor.constraint(equalTo: topAnchor, constant: 0),
             botaoTampa.centerXAnchor.constraint(equalTo: centerXAnchor),
             botaoTampa.widthAnchor.constraint(equalToConstant: 64),
             botaoTampa.heightAnchor.constraint(equalToConstant: 64),
 
-            // O rótulo fica logo abaixo da base escura
+            // O rotulo fica logo abaixo da base escura
             rotulo.topAnchor.constraint(equalTo: baseView.bottomAnchor, constant: 6),
             rotulo.centerXAnchor.constraint(equalTo: centerXAnchor),
             rotulo.bottomAnchor.constraint(equalTo: bottomAnchor),
@@ -98,21 +96,20 @@ final class BotaoNovaAtividade: UIView {
         ])
     }
 
-    // MARK: - Efeito 3D (Ações de Toque)
 
     @objc private func toqueDown() {
-        isPressed = true // Afunda exatamente 6 pixels, cobrindo a base escura
+        isPressed = true //
     }
 
     @objc private func toqueUp() {
-        isPressed = false // Retorna ao topo, revelando o relevo de 6 pixels da base
+        isPressed = false
     }
 
     @objc private func botaoApertado() {
         delegate?.botaoFoiTocado()
     }
 
-    // MARK: - Alternar entre + e × (Leque - Etapa 10)
+    // alternar entre + e ×
     
     func alternarEstado(aberto: Bool) {
         estaAberto = aberto
@@ -121,7 +118,6 @@ final class BotaoNovaAtividade: UIView {
         atualizarTransform(comMola: true)
     }
 
-    /// Combina a rotação do ícone (+ para ×) com a translação exata de afundamento de 6 pixels
     private func atualizarTransform(comMola: Bool = false) {
         let duracao = comMola ? 0.3 : 0.1
         
@@ -129,10 +125,11 @@ final class BotaoNovaAtividade: UIView {
             var transform = CGAffineTransform.identity
             
             if self.estaAberto {
-                transform = transform.rotated(by: .pi / 4) // Gira 45° para virar ×
+                // Gira 45° para virar ×
+                transform = transform.rotated(by: .pi / 4)
             }
             if self.isPressed {
-                transform = transform.translatedBy(x: 0, y: 6) // Afunda exatamente 6 pixels para sumir com a base
+                transform = transform.translatedBy(x: 0, y: 6) 
             }
             
             self.botaoTampa.transform = transform

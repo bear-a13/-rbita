@@ -1,4 +1,3 @@
-// MARK: - Telas/UniversoViewController.swift
 import UIKit
 
 final class UniversoViewController: UIViewController {
@@ -9,16 +8,17 @@ final class UniversoViewController: UIViewController {
     private let botaoNovaAtividade = BotaoNovaAtividade()
     private let lequeView = LequeView()
     private let sensor = SensorDeMovimento()
-    /// Vibração curta quando um planeta bate (estilo "rígido", como pedra).
+    // vibração quando o planeta bate
     private let vibracaoBatida = UIImpactFeedbackGenerator(style: .rigid)
+    private let vibracaoConcluir = UIImpactFeedbackGenerator(style: .heavy)
 
-    /// O gerenciador do banco (SwiftData), injetado pelo SceneDelegate.
+   
     private let store: AtividadeStore
 
-    /// Planetas que estão na tela agora.
+    
     private var planetas: [PlanetaView] = []
 
-    // MARK: - Inicializador (injeção de dependência)
+    
 
     init(store: AtividadeStore) {
         self.store = store
@@ -29,7 +29,7 @@ final class UniversoViewController: UIViewController {
         fatalError("init(coder:) não foi implementado")
     }
 
-    // MARK: - Ciclo de vida
+    // iclo de vida
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -40,27 +40,22 @@ final class UniversoViewController: UIViewController {
         configurarBotao()
         configurarToqueForaDoLeque()
 
-        // 1. Liga o motor de física
         fisica = UniversoFisico(referencia: view)
 
-        // 2. Gravidade vem do sensor (com "Reduzir movimento" ligado, fica sempre para baixo)
         sensor.aoMudarGravidade = { [weak self] direcao in
             let gravidadeFinal = UIAccessibility.isReduceMotionEnabled ? CGVector(dx: 0, dy: 1) : direcao
             self?.fisica?.definirGravidade(gravidadeFinal)
         }
 
-        // 3. Chacoalhar forte = empurrão aleatório em todos
         sensor.aoChacoalhar = { [weak self] in
             self?.chacoalhar()
         }
 
-        // 4. Balançar = os planetas ficam para trás por inércia, na direção contrária da mão
         sensor.aoBalancar = { [weak self] aceleracao, intervalo in
             guard !UIAccessibility.isReduceMotionEnabled else { return }
             self?.fisica?.balancar(aceleracao: aceleracao, intervalo: intervalo)
         }
-
-        // 5. Vibração: quanto mais forte a batida, mais forte a vibração
+// assim é possivel controlar o nivel de vibração
         vibracaoBatida.prepare()
         fisica?.aoBater = { [weak self] intensidade in
             self?.vibracaoBatida.impactOccurred(intensity: 0.3 + 0.7 * intensidade)
@@ -86,12 +81,10 @@ final class UniversoViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // A safe area só é definitiva aqui; por isso os planetas nascem agora.
         if planetas.isEmpty { carregarAtividadesDoBanco() }
     }
 
-    /// Chacoalhar no SIMULADOR (menu Device > Shake). O simulador não tem CoreMotion,
-    /// então o SensorDeMovimento nunca avisa por lá — este é o atalho para testar.
+
     override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
         if motion == .motionShake { chacoalhar() }
     }
@@ -101,7 +94,7 @@ final class UniversoViewController: UIViewController {
         fisica?.impulsionarTodos()
     }
 
-    // MARK: - Fundo e estado vazio
+    //fundo e estado vazio
 
     private func configurarFundo() {
         fundoImageView.image = UIImage(named: "fundo-ceu")
@@ -161,10 +154,10 @@ final class UniversoViewController: UIViewController {
         ])
     }
 
-    /// Toque em qualquer lugar fora do leque fecha o leque.
     private func configurarToqueForaDoLeque() {
         let toque = UITapGestureRecognizer(target: self, action: #selector(tocouFora(_:)))
-        toque.cancelsTouchesInView = false // não "rouba" o toque dos planetas e botões
+        // não conta se o toque for nos planetas e botões
+        toque.cancelsTouchesInView = false
         view.addGestureRecognizer(toque)
     }
 
@@ -180,7 +173,7 @@ final class UniversoViewController: UIViewController {
         lequeView.alternar(abrir: abrir)
     }
 
-    // MARK: - Planetas
+    // Planetas
 
     private func carregarAtividadesDoBanco() {
         semearExemplosNaPrimeiraVez()
@@ -190,8 +183,8 @@ final class UniversoViewController: UIViewController {
         atualizarEstadoVazio()
     }
 
-    /// Na PRIMEIRA abertura do app, cria alguns planetas de exemplo.
-    /// Fica marcado no UserDefaults: se o usuário concluir tudo, os exemplos NÃO voltam.
+    // exemplos no inicio, primeira vez
+    //
     private func semearExemplosNaPrimeiraVez() {
         let chave = "jaSemeouPlanetasIniciais"
         guard !UserDefaults.standard.bool(forKey: chave) else { return }
@@ -199,20 +192,15 @@ final class UniversoViewController: UIViewController {
         guard store.pendentes().isEmpty else { return }
 
         let exemplos: [(String, Prioridade, AparenciaPlaneta)] = [
-            ("Estudar cálculo", .grande, .jupiter),
-            ("Entregar o projeto", .grande, .saturno),
-            ("Cobrar o Rafa", .media, .terra),
-            ("Pagar o boleto", .media, .marte),
-            ("Falar com o Axiel", .pequena, .lua),
-            ("Responder a Ana", .pequena, .tita)
+            ("Toque duas vezes - Apagar", .grande, .jupiter),
+            ("Toque uma vez - Editar", .grande, .saturno),
         ]
         for (titulo, prioridade, aparencia) in exemplos {
             store.adicionar(titulo: titulo, descricao: "", prioridade: prioridade, aparencia: aparencia)
         }
     }
 
-    /// ÚNICO lugar que transforma uma Atividade em planeta na tela.
-    /// `centro`: onde nascer (na edição, no mesmo lugar do planeta antigo). Se nil, procura um lugar livre.
+   
     private func criarPlaneta(para atividade: Atividade, centro: CGPoint? = nil) {
         guard let fisica else { return }
         let largura = view.bounds.width
@@ -233,7 +221,7 @@ final class UniversoViewController: UIViewController {
         planeta.center = centro ?? posicaoLivre(diametro: diametro,
                                                 larguraVisivel: diametro * aparencia.escalaDaImagem.width)
 
-        // Saturno fica por cima dos outros (os anéis passam na frente), mas abaixo do botão.
+        // logica para o saturno, não sei pq fui inventar
         if aparencia == .saturno {
             view.insertSubview(planeta, belowSubview: botaoNovaAtividade)
         } else {
@@ -245,36 +233,36 @@ final class UniversoViewController: UIViewController {
         atualizarEstadoVazio()
     }
 
-    /// Tira o planeta da física e da lista. Com poeira = concluir; sem poeira = troca na edição.
-    private func removerPlaneta(_ planeta: PlanetaView, comPoeira: Bool, corDaPoeira: UIColor = .white) {
+    // Tira o planeta da física e da lista
+    private func removerPlaneta(_ planeta: PlanetaView, animado: Bool) {
         fisica?.remover(planeta)
         planetas.removeAll { $0 === planeta }
         atualizarEstadoVazio()
 
-        guard comPoeira else {
+        guard animado else {
             planeta.removeFromSuperview()
             return
         }
-        EfeitoPoeira.explodir(em: planeta.center,
-                              diametro: planeta.bounds.width,
-                              cor: corDaPoeira,
-                              dentroDe: view)
-        UIView.animate(withDuration: 0.25, animations: {
-            planeta.alpha = 0
-            planeta.transform = CGAffineTransform(scaleX: 1.15, y: 1.15)
+        // encha um pouco e depois encolhe até sumir.
+        UIView.animateKeyframes(withDuration: 0.35, delay: 0, options: [.calculationModeCubic], animations: {
+            UIView.addKeyframe(withRelativeStartTime: 0, relativeDuration: 0.3) {
+                planeta.transform = CGAffineTransform(scaleX: 1.12, y: 1.12)
+            }
+            UIView.addKeyframe(withRelativeStartTime: 0.3, relativeDuration: 0.7) {
+                planeta.transform = CGAffineTransform(scaleX: 0.01, y: 0.01)
+                planeta.alpha = 0
+            }
         }, completion: { _ in
             planeta.removeFromSuperview()
         })
     }
 
-    /// Procura um ponto onde o planeta não nasça em cima de outro nem do botão "+".
     private func posicaoLivre(diametro: CGFloat, larguraVisivel: CGFloat) -> CGPoint {
         let area = view.bounds.inset(by: view.safeAreaInsets)
         let raio = diametro / 2
         let margemX = min(larguraVisivel / 2 + 8, area.width / 2)
         let faixaY = (area.minY + raio + 8)...max(area.minY + raio + 8, area.maxY - raio - 8)
 
-        // O botão entra na conta como se fosse mais um "vizinho" redondo.
         let botao = botaoNovaAtividade.frame
         var vizinhos = planetas.map { ($0.center, $0.bounds.width / 2) }
         vizinhos.append((CGPoint(x: botao.midX, y: botao.midY), max(botao.width, botao.height) / 2))
@@ -307,27 +295,24 @@ final class UniversoViewController: UIViewController {
     }
 }
 
-// MARK: - PlanetaViewDelegate
+// planetaViewDelegate
 
 extension UniversoViewController: PlanetaViewDelegate {
-    /// Toque simples: editar (Etapa 12).
+    //toque para editar
     func planetaFoiTocado(_ planeta: PlanetaView) {
-        // Se o leque estava aberto, o primeiro toque só fecha o leque.
         if botaoNovaAtividade.estaAberto { abrirLeque(false); return }
         guard let atividade = store.buscar(id: planeta.atividadeID) else { return }
         abrirFormulario(.editar(atividade))
     }
 
-    /// Toque duplo: concluir com poeira (Etapa 13).
+    //Toque duplo conclui
     func planetaFoiTocadoDuasVezes(_ planeta: PlanetaView) {
-        var cor = UIColor.white
         if let atividade = store.buscar(id: planeta.atividadeID) {
-            cor = UIColor(hex: atividade.aparencia.corPrincipalHex)
             store.concluir(atividade)
         }
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        vibracaoConcluir.impactOccurred(intensity: 1.0)
         UIAccessibility.post(notification: .announcement, argument: "Atividade concluída")
-        removerPlaneta(planeta, comPoeira: !UIAccessibility.isReduceMotionEnabled, corDaPoeira: cor)
+        removerPlaneta(planeta, animado: !UIAccessibility.isReduceMotionEnabled)
     }
 
     func planeta(_ planeta: PlanetaView, arrastou gesto: UIPanGestureRecognizer) {
@@ -341,7 +326,7 @@ extension UniversoViewController: PlanetaViewDelegate {
     }
 }
 
-// MARK: - BotaoNovaAtividadeDelegate
+//BotaoNovaAtividadeDelegate
 
 extension UniversoViewController: BotaoNovaAtividadeDelegate {
     func botaoFoiTocado() {
@@ -349,7 +334,7 @@ extension UniversoViewController: BotaoNovaAtividadeDelegate {
     }
 }
 
-// MARK: - LequeViewDelegate (Etapas 10 e 11)
+//  LequeViewDelegate
 
 extension UniversoViewController: LequeViewDelegate {
     func lequeSelecionou(prioridade: Prioridade) {
@@ -358,7 +343,7 @@ extension UniversoViewController: LequeViewDelegate {
     }
 }
 
-// MARK: - FormularioAtividadeDelegate (Etapas 11 e 12)
+//
 
 extension UniversoViewController: FormularioAtividadeDelegate {
     func formularioCriou(titulo: String, descricao: String, prioridade: Prioridade) {
@@ -373,13 +358,11 @@ extension UniversoViewController: FormularioAtividadeDelegate {
         store.atualizar(atividade, titulo: titulo, descricao: descricao, prioridade: prioridade)
 
         if prioridadeAntiga == prioridade {
-            // Mesmo tamanho: só troca o texto, o planeta continua na física.
             planeta.atualizarTitulo(titulo)
         } else {
-            // Tamanho mudou: a física não aceita mudar o tamanho de um item,
-            // então trocamos o planeta por um novo no mesmo lugar.
+           
             let centro = planeta.center
-            removerPlaneta(planeta, comPoeira: false)
+            removerPlaneta(planeta, animado: false)
             criarPlaneta(para: atividade, centro: centro)
         }
     }
