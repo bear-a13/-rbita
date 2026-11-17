@@ -9,7 +9,7 @@ import UIKit
 @MainActor
 protocol PlanetaViewDelegate: AnyObject {
     func planetaFoiTocado(_ planeta: PlanetaView)
-    func planetaFoiTocadoDuasVezes(_ planeta: PlanetaView)
+    func planetaFoiPressionadoLongo(_ planeta: PlanetaView)
     func planeta(_ planeta: PlanetaView, arrastou gesto: UIPanGestureRecognizer)
 }
 
@@ -21,6 +21,12 @@ final class PlanetaView: UIView {
     private let rotulo = UILabel()
     //muito importante para a fisica determinando o foramto circular
     override var collisionBoundsType: UIDynamicItemCollisionBoundsType { .ellipse }
+    
+    private let tempoParaConcluir: TimeInterval = 1.5
+    private let vibracaoSegurar = UIImpactFeedbackGenerator(style: .heavy)
+    private var timerSegurar: Timer?
+    private var inicioSegurar: Date?
+    private var anelProgresso: CAShapeLayer?
 
     init(atividadeID: UUID, titulo: String, nomeDoAsset: String,
          diametro: CGFloat, escalaDaImagem: CGSize = CGSize(width: 1, height: 1),
@@ -75,31 +81,31 @@ final class PlanetaView: UIView {
             addSubview(rotulo)
         }
     private func configurarGestos() {
-            let duplo = UITapGestureRecognizer(target: self, action: #selector(tocouDuasVezes))
-            duplo.numberOfTapsRequired = 2
-
+            
             let simples = UITapGestureRecognizer(target: self, action: #selector(tocouUmaVez))
-            // Se o usuário tentar tocar duas vezes rápido, o simples ESPERA para não disparar
-            simples.require(toFail: duplo)
-
+            
             let arrasto = UIPanGestureRecognizer(target: self, action: #selector(arrastou(_:)))
+            
+            // Começa rápido (0,2 s) para o anel aparecer logo; os 3 s são contados por nós.
+            let longo = UILongPressGestureRecognizer(target: self, action: #selector(pressionouLongo(_:)))
+            longo.minimumPressDuration = 0.2
 
-            addGestureRecognizer(duplo)
             addGestureRecognizer(simples)
             addGestureRecognizer(arrasto)
+            addGestureRecognizer(longo)
         }
 
         private func configurarAcessibilidade(titulo: String) {
             isAccessibilityElement = true
             accessibilityLabel = titulo
-            accessibilityHint = "Toque para editar."
+            accessibilityHint = "Toque para editar. Segure por 3 segundos para concluir."
             
             
             // Como o toque duplo no VoiceOver ativa o item, criamos uma ação explícita para concluir
             accessibilityCustomActions = [
                 UIAccessibilityCustomAction(name: "Concluir") { [weak self] _ in
                     guard let self else { return false }
-                    self.delegate?.planetaFoiTocadoDuasVezes(self)
+                    self.delegate?.planetaFoiPressionadoLongo(self)
                     return true
                 }
             ]
@@ -111,6 +117,69 @@ final class PlanetaView: UIView {
         }
 
         @objc private func tocouUmaVez() { delegate?.planetaFoiTocado(self) }
-        @objc private func tocouDuasVezes() { delegate?.planetaFoiTocadoDuasVezes(self) }
+        @objc private func pressionouLongo(_ gesto: UILongPressGestureRecognizer) {
+            switch gesto.state {
+            case .began: comecarSegurar()
+            case .ended, .cancelled, .failed: cancelarSegurar()
+            default: break
+            }
+        }
+
+        private func comecarSegurar() {
+            // anel amarelo em volta do planeta que vai se fechando private let tempoParaConcluir: TimeInterval = 1.5
+
+            let anel = CAShapeLayer()
+            let raio = bounds.width / 2
+            anel.path = UIBezierPath(arcCenter: CGPoint(x: bounds.midX, y: bounds.midY), radius: raio,
+                                     startAngle: -.pi / 2, endAngle: .pi * 1.5, clockwise: true).cgPath
+            anel.fillColor = UIColor.clear.cgColor
+            anel.strokeColor = Tema.amareloPrincipal.cgColor
+            anel.lineWidth = 5
+            anel.lineCap = .round
+
+            layer.addSublayer(anel)
+            anelProgresso = anel
+
+            inicioSegurar = Date()
+            vibracaoSegurar.prepare()
+            timerSegurar = Timer.scheduledTimer(withTimeInterval: 0.07, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated { self?.avancarSegurar() }
+            }
+        }
+
+        private func avancarSegurar() {
+            guard let inicio = inicioSegurar else { return }
+            let progresso = min(1, Date().timeIntervalSince(inicio) / tempoParaConcluir)
+
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            anelProgresso?.strokeEnd = progresso
+            CATransaction.commit()
+
+            // vibração constante que fica mais forte perto do fim
+            vibracaoSegurar.impactOccurred(intensity: 0.4 + 0.6 * progresso)
+
+
+            if progresso >= 1 {
+                pararSegurar()
+                delegate?.planetaFoiPressionadoLongo(self)
+            }
+        }
+
+        private func cancelarSegurar() {
+            guard inicioSegurar != nil else { return }  
+            pararSegurar()
+            UIView.animate(withDuration: 0.2) { self.imagem.transform = .identity }
+        }
+
+        private func pararSegurar() {
+            timerSegurar?.invalidate()
+            timerSegurar = nil
+            inicioSegurar = nil
+            anelProgresso?.removeFromSuperlayer()
+            anelProgresso = nil
+        }
+
         @objc private func arrastou(_ gesto: UIPanGestureRecognizer) { delegate?.planeta(self, arrastou: gesto) }
     }
+

@@ -192,8 +192,8 @@ final class UniversoViewController: UIViewController {
         guard store.pendentes().isEmpty else { return }
 
         let exemplos: [(String, Prioridade, AparenciaPlaneta)] = [
-            ("Toque duas vezes - Apagar", .grande, .jupiter),
-            ("Toque uma vez - Editar", .grande, .saturno),
+            ("precione: concluir", .grande, .jupiter),
+            ("Toque: editar", .grande, .saturno),
         ]
         for (titulo, prioridade, aparencia) in exemplos {
             store.adicionar(titulo: titulo, descricao: "", prioridade: prioridade, aparencia: aparencia)
@@ -298,15 +298,17 @@ final class UniversoViewController: UIViewController {
 // planetaViewDelegate
 
 extension UniversoViewController: PlanetaViewDelegate {
-    //toque para editar
+    // toque para editar
     func planetaFoiTocado(_ planeta: PlanetaView) {
         if botaoNovaAtividade.estaAberto { abrirLeque(false); return }
         guard let atividade = store.buscar(id: planeta.atividadeID) else { return }
         abrirFormulario(.editar(atividade))
     }
 
-    //Toque duplo conclui
-    func planetaFoiTocadoDuasVezes(_ planeta: PlanetaView) {
+    /*
+     A exclusão agora é por pressão longa de 3s, não mais pelo duplo toque.
+     */
+    func planetaFoiPressionadoLongo(_ planeta: PlanetaView) {
         if let atividade = store.buscar(id: planeta.atividadeID) {
             store.concluir(atividade)
         }
@@ -367,3 +369,4 @@ extension UniversoViewController: FormularioAtividadeDelegate {
         }
     }
 }
+
