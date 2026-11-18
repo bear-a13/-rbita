@@ -30,9 +30,10 @@ nonisolated enum Prioridade: String, Codable, CaseIterable{
         }
     }
     
-    // cuidado para telas menores
-    func diametro(larguraDaTela: CGFloat) -> CGFloat {
-        return diametroBase * min(1, larguraDaTela / 440)
+    // cuidado para telas menores. Saturno usa o corpo de 180 px em vez do da prioridade.
+    func diametro(larguraDaTela: CGFloat, aparencia: AparenciaPlaneta? = nil) -> CGFloat {
+        let base = aparencia?.diametroCorpo ?? diametroBase
+        return base * min(1, larguraDaTela / 440)
     }
     
     var elasticidade: CGFloat{

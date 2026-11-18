@@ -192,7 +192,7 @@ final class UniversoViewController: UIViewController {
         guard store.pendentes().isEmpty else { return }
 
         let exemplos: [(String, Prioridade, AparenciaPlaneta)] = [
-            ("precione: concluir", .grande, .jupiter),
+            ("pressione: concluir", .grande, .jupiter),
             ("Toque: editar", .grande, .saturno),
         ]
         for (titulo, prioridade, aparencia) in exemplos {
@@ -206,7 +206,7 @@ final class UniversoViewController: UIViewController {
         let largura = view.bounds.width
         let prioridade = atividade.prioridade
         let aparencia = atividade.aparencia
-        let diametro = prioridade.diametro(larguraDaTela: largura)
+        let diametro = prioridade.diametro(larguraDaTela: largura, aparencia: aparencia)
 
         let planeta = PlanetaView(
             atividadeID: atividade.id,
@@ -306,7 +306,7 @@ extension UniversoViewController: PlanetaViewDelegate {
     }
 
     /*
-     A exclusão agora é por pressão longa de 3s, não mais pelo duplo toque.
+     A conclusão agora é por pressão longa de 1,5 s, não mais pelo duplo toque.
      */
     func planetaFoiPressionadoLongo(_ planeta: PlanetaView) {
         if let atividade = store.buscar(id: planeta.atividadeID) {
